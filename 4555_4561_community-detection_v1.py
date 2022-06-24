@@ -500,7 +500,7 @@ def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
     node_names_list = list(set(node_names_list))
     print("\n Node names list: ", node_names_list)
 
-    # Print graph of fb_links_loopless_df
+    # Print the graph of fb_links_loopless_df
     G = nx.from_pandas_edgelist(fb_links_loopless_df, "node_1", "node_2", create_using=nx.Graph())
     my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
 
