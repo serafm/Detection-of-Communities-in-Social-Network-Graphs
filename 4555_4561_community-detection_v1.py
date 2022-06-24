@@ -9,25 +9,27 @@ from networkx.algorithms import community as comm
 from networkx.algorithms import centrality as cntr
 import os
 
+
 ############################### FG COLOR DEFINITIONS ###############################
 class bcolors:
-    HEADER      = '\033[95m'
-    OKBLUE      = '\033[94m'
-    OKCYAN      = '\033[96m'
-    OKGREEN     = '\033[92m'
-    WARNING     = '\033[93m'
-    FAIL        = '\033[91m'
-    ENDC        = '\033[0m'    # RECOVERS DEFAULT TEXT COLOR
-    BOLD        = '\033[1m'
-    UNDERLINE   = '\033[4m'
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'  # RECOVERS DEFAULT TEXT COLOR
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
     def disable(self):
-        self.HEADER     = ''
-        self.OKBLUE     = ''
-        self.OKGREEN    = ''
-        self.WARNING    = ''
-        self.FAIL       = ''
-        self.ENDC       = ''
+        self.HEADER = ''
+        self.OKBLUE = ''
+        self.OKGREEN = ''
+        self.WARNING = ''
+        self.FAIL = ''
+        self.ENDC = ''
+
 
 ########################################################################################
 ############################## MY ROUTINES LIBRARY STARTS ##############################
@@ -35,42 +37,43 @@ class bcolors:
 
 # SIMPLE ROUTINE TO CLEAR SCREEN BEFORE SHOWING A MENU...
 def my_clear_screen():
-
     os.system('cls' if os.name == 'nt' else 'clear')
+
 
 # CREATE A LIST OF RANDOMLY CHOSEN COLORS...
 def my_random_color_list_generator(REQUIRED_NUM_COLORS):
+    my_color_list = ['red',
+                     'green',
+                     'cyan',
+                     'brown',
+                     'olive',
+                     'orange',
+                     'darkblue',
+                     'purple',
+                     'yellow',
+                     'hotpink',
+                     'teal',
+                     'gold']
 
-    my_color_list = [   'red',
-                        'green',
-                        'cyan',
-                        'brown',
-                        'olive',
-                        'orange',
-                        'darkblue',
-                        'purple',
-                        'yellow',
-                        'hotpink',
-                        'teal',
-                        'gold']
-
-    my_used_colors_dict = { c:0 for c in my_color_list }     # DICTIONARY OF FLAGS FOR COLOR USAGE. Initially no color is used...
+    my_used_colors_dict = {c: 0 for c in
+                           my_color_list}  # DICTIONARY OF FLAGS FOR COLOR USAGE. Initially no color is used...
     constructed_color_list = []
 
     if REQUIRED_NUM_COLORS <= len(my_color_list):
         for i in range(REQUIRED_NUM_COLORS):
             constructed_color_list.append(my_color_list[i])
-        
-    else: # REQUIRED_NUM_COLORS > len(my_color_list)   
-        constructed_color_list = ["#"+''.join([random.choice('0123456789ABCDEF') for j in range(6)]) for i in range(REQUIRED_NUM_COLORS)]
- 
-    return(constructed_color_list)
+
+    else:  # REQUIRED_NUM_COLORS > len(my_color_list)
+        constructed_color_list = ["#" + ''.join([random.choice('0123456789ABCDEF') for j in range(6)]) for i in
+                                  range(REQUIRED_NUM_COLORS)]
+
+    return (constructed_color_list)
 
 
 # VISUALISE A GRAPH WITH COLORED NODES AND LINKS
-def my_graph_plot_routine(G,fb_nodes_colors,fb_links_colors,fb_links_styles,graph_layout,node_positions):
-    plt.figure(figsize=(10,10))
-    
+def my_graph_plot_routine(G, fb_nodes_colors, fb_links_colors, fb_links_styles, graph_layout, node_positions):
+    plt.figure(figsize=(10, 10))
+
     if len(node_positions) == 0:
         if graph_layout == 'circular':
             node_positions = nx.circular_layout(G)
@@ -80,36 +83,35 @@ def my_graph_plot_routine(G,fb_nodes_colors,fb_links_colors,fb_links_styles,grap
             node_positions = nx.planar_layout(G)
         elif graph_layout == 'shell':
             node_positions = nx.shell_layout(G)
-        else:   #DEFAULT VALUE == spring
+        else:  # DEFAULT VALUE == spring
             node_positions = nx.spring_layout(G)
 
-    nx.draw(G, 
-        with_labels=True,           # indicator variable for showing the nodes' ID-labels
-        style=fb_links_styles,      # edge-list of link styles, or a single default style for all edges
-        edge_color=fb_links_colors, # edge-list of link colors, or a single default color for all edges
-        pos = node_positions,       # node-indexed dictionary, with position-values of the nodes in the plane
-        node_color=fb_nodes_colors, # either a node-list of colors, or a single default color for all nodes
-        node_size = 100,            # node-circle radius
-        alpha = 0.9,                # fill-transparency 
-        width = 0.5                 # edge-width
-        )
+    nx.draw(G,
+            with_labels=True,  # indicator variable for showing the nodes' ID-labels
+            style=fb_links_styles,  # edge-list of link styles, or a single default style for all edges
+            edge_color=fb_links_colors,  # edge-list of link colors, or a single default color for all edges
+            pos=node_positions,  # node-indexed dictionary, with position-values of the nodes in the plane
+            node_color=fb_nodes_colors,  # either a node-list of colors, or a single default color for all nodes
+            node_size=100,  # node-circle radius
+            alpha=0.9,  # fill-transparency
+            width=0.5  # edge-width
+            )
     plt.show()
 
-    return(node_positions)
+    return (node_positions)
 
 
 ########################################################################################
 # MENU 1 STARTS: creation of input graph ### 
 ########################################################################################
-def my_menu_graph_construction(G,node_names_list,node_positions):
-
+def my_menu_graph_construction(G, node_names_list, node_positions):
     my_clear_screen()
 
-    breakWhileLoop  = False
+    breakWhileLoop = False
 
     while not breakWhileLoop:
-        print(bcolors.OKGREEN 
-        + '''
+        print(bcolors.OKGREEN
+              + '''
 ========================================
 (1.1) Create graph from fb-food data set (fb-pages-food.nodes and fb-pages-food.nodes)\t[format: L,<NUM_LINKS>]
 (1.2) Create RANDOM Erdos-Renyi graph G(n,p).\t\t\t\t\t\t[format: R,<number of nodes>,<edge probability>]
@@ -118,33 +120,34 @@ def my_menu_graph_construction(G,node_names_list,node_positions):
 (1.5) EXIT\t\t\t\t\t\t\t\t\t\t[format: E]
 ----------------------------------------
         ''' + bcolors.ENDC)
-        
+
         my_option_list = str(input('\tProvide your (case-sensitive) option: ')).split(',')
-        
+
         if my_option_list[0] == 'L':
-            MAX_NUM_LINKS = 2102    # this is the maximum number of links in the fb-food-graph data set...
+            MAX_NUM_LINKS = 2102  # this is the maximum number of links in the fb-food-graph data set...
 
             if len(my_option_list) > 2:
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
                 print(bcolors.WARNING + "\tERROR MESSAGE: Too many parameters. Try again..." + bcolors.ENDC)
-                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)            
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
             else:
                 if len(my_option_list) == 1:
                     NUM_LINKS = MAX_NUM_LINKS
-                else: #...len(my_option_list) == 2...
+                else:  # ...len(my_option_list) == 2...
                     NUM_LINKS = int(my_option_list[1])
 
                 if NUM_LINKS > MAX_NUM_LINKS or NUM_LINKS < 1:
                     print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                    print(bcolors.WARNING + "\tERROR Invalid number of links to read from data set. It should be in {1,2,...,2102}. Try again..." + bcolors.ENDC)
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)            
+                    print(
+                        bcolors.WARNING + "\tERROR Invalid number of links to read from data set. It should be in {1,2,...,2102}. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
                 else:
                     # LOAD GRAPH FROM DATA SET...
-                    #G,node_names_list = 
+                    # G,node_names_list =
                     STUDENT_AM_read_graph_from_csv(NUM_LINKS)
-                    print(  "\tConstructing the FB-FOOD graph with n =",G.number_of_nodes(),
-                            "vertices and m =",G.number_of_edges(),"edges (after removal of loops).")
+                    print("\tConstructing the FB-FOOD graph with n =", G.number_of_nodes(),
+                          "vertices and m =", G.number_of_edges(), "edges (after removal of loops).")
 
         elif my_option_list[0] == 'R':
 
@@ -152,80 +155,85 @@ def my_menu_graph_construction(G,node_names_list,node_positions):
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
                 print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-            
-            else: # ...len(my_option_list) <= 3...
+
+            else:  # ...len(my_option_list) <= 3...
                 if len(my_option_list) == 1:
-                    NUM_NODES = 100                     # DEFAULT NUMBER OF NODES FOR THE RANDOM GRAPH...
-                    ER_EDGE_PROBABILITY = 2 / NUM_NODES # DEFAULT VALUE FOR ER_EDGE_PROBABILITY...
+                    NUM_NODES = 100  # DEFAULT NUMBER OF NODES FOR THE RANDOM GRAPH...
+                    ER_EDGE_PROBABILITY = 2 / NUM_NODES  # DEFAULT VALUE FOR ER_EDGE_PROBABILITY...
 
                 elif len(my_option_list) == 2:
                     NUM_NODES = int(my_option_list[1])
-                    ER_EDGE_PROBABILITY = 2 / max(1,NUM_NODES) # AVOID DIVISION WITH ZERO...
+                    ER_EDGE_PROBABILITY = 2 / max(1, NUM_NODES)  # AVOID DIVISION WITH ZERO...
 
-                else: # ...NUM_NODES == 3...
+                else:  # ...NUM_NODES == 3...
                     NUM_NODES = int(my_option_list[1])
                     ER_EDGE_PROBABILITY = float(my_option_list[2])
 
                 if ER_EDGE_PROBABILITY < 0 or ER_EDGE_PROBABILITY > 1 or NUM_NODES < 2:
                     print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                    print(bcolors.WARNING + "\tERROR MESSAGE: Invalid probability mass or number of nodes of G(n,p). Try again..." + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Invalid probability mass or number of nodes of G(n,p). Try again..." + bcolors.ENDC)
                     print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
                 else:
                     G = nx.erdos_renyi_graph(NUM_NODES, ER_EDGE_PROBABILITY)
-                    print(bcolors.ENDC +    "\tConstructing random Erdos-Renyi graph with n =",G.number_of_nodes(),
-                                            "vertices and edge probability p =",ER_EDGE_PROBABILITY,
-                                            "which resulted in m =",G.number_of_edges(),"edges.")
+                    print(bcolors.ENDC + "\tConstructing random Erdos-Renyi graph with n =", G.number_of_nodes(),
+                          "vertices and edge probability p =", ER_EDGE_PROBABILITY,
+                          "which resulted in m =", G.number_of_edges(), "edges.")
 
-                    node_names_list = [ x for x in range(NUM_NODES) ]
+                    node_names_list = [x for x in range(NUM_NODES)]
 
-        elif my_option_list[0] == 'P':                  # PLOT G...
-            print("Printing graph G with",G.number_of_nodes(),"vertices,",G.number_of_edges(),"edges and",nx.number_connected_components(G),"connected components." )
-                
+        elif my_option_list[0] == 'P':  # PLOT G...
+            print("Printing graph G with", G.number_of_nodes(), "vertices,", G.number_of_edges(), "edges and",
+                  nx.number_connected_components(G), "connected components.")
+
             if len(my_option_list) > 3:
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
                 print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                
+
             else:
                 if len(my_option_list) <= 1:
-                    graph_layout = 'spring'     # ...DEFAULT graph_layout value...
+                    graph_layout = 'spring'  # ...DEFAULT graph_layout value...
                     reset_node_positions = 'Y'  # ...DEFAULT decision: erase node_positions...
 
-                elif len(my_option_list) == 2: 
+                elif len(my_option_list) == 2:
                     graph_layout = str(my_option_list[1])
                     reset_node_positions = 'Y'  # ...DEFAULT decision: erase node_positions...
 
-                else: # ...len(my_option_list) == 3...
+                else:  # ...len(my_option_list) == 3...
                     graph_layout = str(my_option_list[1])
                     reset_node_positions = str(my_option_list[2])
 
-                if graph_layout not in ['spring','random','circular','shell']:
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice for graph layout. Try again..." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                if graph_layout not in ['spring', 'random', 'circular', 'shell']:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice for graph layout. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
-                elif reset_node_positions not in ['Y','y','N','n']:
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible decision for resetting node positions. Try again..." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                elif reset_node_positions not in ['Y', 'y', 'N', 'n']:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible decision for resetting node positions. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
                 else:
-                    if reset_node_positions in ['y','Y']:
-                        node_positions = []         # ...ERASE previous node positions...
+                    if reset_node_positions in ['y', 'Y']:
+                        node_positions = []  # ...ERASE previous node positions...
 
-                    node_positions = my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions)
+                    node_positions = my_graph_plot_routine(G, 'grey', 'blue', 'solid', graph_layout, node_positions)
 
         elif my_option_list[0] == 'N':
             NUM_NODES = G.number_of_nodes()
             if NUM_NODES == 0:
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                print(bcolors.WARNING + "\tERROR MESSAGE: You have not yet constructed a graph to work with. Try again..." + bcolors.ENDC)
+                print(
+                    bcolors.WARNING + "\tERROR MESSAGE: You have not yet constructed a graph to work with. Try again..." + bcolors.ENDC)
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
             else:
                 my_clear_screen()
                 breakWhileLoop = True
-            
+
         elif my_option_list[0] == 'E':
             quit()
 
@@ -234,18 +242,18 @@ def my_menu_graph_construction(G,node_names_list,node_positions):
             print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible input was provided. Try again..." + bcolors.ENDC)
             print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
-    return(G,node_names_list,node_positions)
+    return (G, node_names_list, node_positions)
+
 
 ########################################################################################
 # MENU 2: detect communities in the constructed graph 
 ########################################################################################
-def my_menu_community_detection(G,node_names_list,node_positions,hierarchy_of_community_tuples):
-
+def my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of_community_tuples):
     breakWhileLoop = False
 
     while not breakWhileLoop:
-            print(bcolors.OKGREEN 
-                + '''
+        print(bcolors.OKGREEN
+              + '''
 ========================================
 (2.1) Add random edges from each node\t\t\t[format: RE,<NUM_RANDOM_EDGES_PER_NODE>,<EDGE_ADDITION_PROBABILITY in [0,1]>]
 (2.2) Add hamilton cycle (if graph is not connected)\t[format: H]
@@ -258,184 +266,197 @@ def my_menu_community_detection(G,node_names_list,node_positions,hierarchy_of_co
 ----------------------------------------
             ''' + bcolors.ENDC)
 
-            my_option_list = str(input('\tProvide your (case-sensitive) option: ')).split(',')
+        my_option_list = str(input('\tProvide your (case-sensitive) option: ')).split(',')
 
-            if my_option_list[0] == 'RE':                    # 2.1: ADD RANDOM EDGES TO NODES...
+        if my_option_list[0] == 'RE':  # 2.1: ADD RANDOM EDGES TO NODES...
 
-                if len(my_option_list) > 3:
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                    print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. [format: D,<NUM_RANDOM_EDGES>,<EDGE_ADDITION_PROBABILITY>]. Try again..." + bcolors.ENDC)
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                else:
-                    if len(my_option_list) == 1:
-                        NUM_RANDOM_EDGES = 1                # DEFAULT NUMBER OF RANDOM EDGES TO ADD (per node)
-                        EDGE_ADDITION_PROBABILITY = 0.25    # DEFAULT PROBABILITY FOR ADDING EACH RANDOM EDGE (independently of other edges) FROM EAC NODE (independently from other nodes)...
-
-                    elif len(my_option_list) == 2:
-                        NUM_RANDOM_EDGES = int(my_option_list[1])
-                        EDGE_ADDITION_PROBABILITY = 0.25    # DEFAULT PROBABILITY FOR ADDING EACH RANDOM EDGE (independently of other edges) FROM EAC NODE (independently from other nodes)...
-
-                    else:
-                        NUM_RANDOM_EDGES = int(my_option_list[1])
-                        EDGE_ADDITION_PROBABILITY = float(my_option_list[2])
-            
-                    # CHECK APPROPIATENESS OF INPUT AND RUN THE ROUTINE...
-                    if NUM_RANDOM_EDGES-1 not in range(5):
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: Too many random edges requested. Should be from {1,2,...,5}. Try again..." + bcolors.ENDC) 
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                    elif EDGE_ADDITION_PROBABILITY < 0 or EDGE_ADDITION_PROBABILITY > 1:
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: Not appropriate value was given for EDGE_ADDITION PROBABILITY. Try again..." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                    else: 
-                        #G = 
-                        STUDENT_AM_add_random_edges_to_graph(G,node_names_list,NUM_RANDOM_EDGES,EDGE_ADDITION_PROBABILITY)
-
-            elif my_option_list[0] == 'H':                  #2.2: ADD HAMILTON CYCLE...
-
-                    #G = 
-                    STUDENT_AM_add_hamilton_cycle_to_graph(G,node_names_list)
-
-            elif my_option_list[0] == 'P':                  # 2.3: PLOT G...
-                print("Printing graph G with",G.number_of_nodes(),"vertices,",G.number_of_edges(),"edges and",nx.number_connected_components(G),"connected components." )
-                
-                if len(my_option_list) > 2:
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                    print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                
-                else:
-                    if len(my_option_list) <= 1:
-                        graph_layout = 'spring'     # ...DEFAULT graph_layout value...
-
-                    else: # ...len(my_option_list) == 2... 
-                        graph_layout = str(my_option_list[1])
-
-                    if graph_layout not in ['spring','random','circular','shell']:
-                            print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                            print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice for graph layout. Try again..." + bcolors.ENDC)
-                            print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                    else:
-                        if len(my_option_list) == 2:
-                            node_positions = []         # ...ERASE previous node positions...
-
-                        node_positions = my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions)
-
-            elif my_option_list[0] == 'C':      # 2.4: COMPUTE ONE-SHOT GN-COMMUNITIES
-                NUM_OPTIONS = len(my_option_list)
-
-                if NUM_OPTIONS > 3:
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                    print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                else:
-                    if NUM_OPTIONS == 1:
-                        alg_choice  = 'N'            # DEFAULT COMM-DETECTION ALGORITHM == NX_GN
-                        graph_layout = 'spring'     # DEFAULT graph layout == spring
-
-                    elif NUM_OPTIONS == 2:
-                        alg_choice  = str(my_option_list[1])
-                        graph_layout = 'spring'     # DEFAULT graph layout == spring
-                
-                    else: # ...NUM_OPTIONS == 3...
-                        alg_choice      = str(my_option_list[1])
-                        graph_layout    = str(my_option_list[2])
-
-                    # CHECKING CORRECTNESS OF GIVWEN PARAMETERS...
-                    if alg_choice == 'N' and graph_layout in ['spring','circular','random','shell']:
-                        STUDENT_AM_use_nx_girvan_newman_for_communities(G,graph_layout,node_positions)
-
-                    elif alg_choice == 'O'and graph_layout in ['spring','circular','random','shell']:
-                        STUDENT_AM_one_shot_girvan_newman_for_communities(G,graph_layout,node_positions)
-
-                    else:
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible parameters for executing the GN-algorithm. Try again..." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-            elif my_option_list[0] == 'D':          # 2.5: COMUTE A BINARY HIERARCHY OF COMMUNITY PARRTITIONS
-                NUM_OPTIONS = len(my_option_list)
-                NUM_NODES = G.number_of_nodes()
-                NUM_COMPONENTS = nx.number_connected_components(G)
-                MAX_NUM_DIVISIONS = min( 8*NUM_COMPONENTS , np.floor(NUM_NODES/4) )
-
-                if NUM_OPTIONS > 3:
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                    print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                else:
-                    if NUM_OPTIONS == 1:
-                        number_of_divisions = 2*NUM_COMPONENTS      # DEFAULT number of communities to look for 
-                        graph_layout = 'spring'                     # DEFAULT graph layout == spring
-                        
-                    elif NUM_OPTIONS == 2:
-                        number_of_divisions = int(my_option_list[1])
-                        graph_layout = 'spring'                     # DEFAULT graph layout == spring
-                    
-                    else: #...NUM_OPTIONS == 3...
-                        number_of_divisions = int(my_option_list[1])
-                        graph_layout = str(my_option_list[2])
-
-                    # CHECKING SYNTAX OF GIVEN PARAMETERS...
-                    if number_of_divisions < NUM_COMPONENTS or number_of_divisions > MAX_NUM_DIVISIONS:
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: The graph has already",NUM_COMPONENTS,"connected components." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tProvide a number of divisions in { ",NUM_COMPONENTS,",",MAX_NUM_DIVISIONS,"}. Try again..." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                    elif graph_layout not in ['spring','random','circular','shell']:
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice of a graph layout. Try again..." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                    else:
-                        STUDENT_AM_divisive_community_detection(G,number_of_divisions,graph_layout,node_positions)
-
-            elif my_option_list[0] == 'M':      # 2.6: DETERMINE PARTITION OF MIN-MODULARITY, FOR A GIVEN BINARY HIERARCHY OF COMMUNITY PARTITIONS
-                STUDENT_AM_determine_opt_community_structure(G,hierarchy_of_community_tuples)
-
-
-            elif my_option_list[0] == 'V':      # 2.7: VISUALIZE COMMUNITIES WITHIN GRAPH
-
-                NUM_OPTIONS = len(my_option_list)
-
-                if NUM_OPTIONS > 2:
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                    print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
-                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                
-                else:
-
-                    if NUM_OPTIONS == 1:
-                        graph_layout = 'spring'                     # DEFAULT graph layout == spring
-                    
-                    else: # ...NUM_OPTIONS == 2...
-                        graph_layout = str(my_option_list[1])
-
-                    if graph_layout not in ['spring','random','circular','shell']:
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                        print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice of a graph layout. Try again..." + bcolors.ENDC)
-                        print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-
-                    else:
-                        STUDENT_AM_visualize_communities(G,community_tuples,graph_layout,node_positions)
-
-            elif my_option_list[0] == 'E':
-                #EXIT the program execution...
-                quit()
+            if len(my_option_list) > 3:
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                print(
+                    bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. [format: D,<NUM_RANDOM_EDGES>,<EDGE_ADDITION_PROBABILITY>]. Try again..." + bcolors.ENDC)
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
             else:
+                if len(my_option_list) == 1:
+                    NUM_RANDOM_EDGES = 1  # DEFAULT NUMBER OF RANDOM EDGES TO ADD (per node)
+                    EDGE_ADDITION_PROBABILITY = 0.25  # DEFAULT PROBABILITY FOR ADDING EACH RANDOM EDGE (independently of other edges) FROM EAC NODE (independently from other nodes)...
+
+                elif len(my_option_list) == 2:
+                    NUM_RANDOM_EDGES = int(my_option_list[1])
+                    EDGE_ADDITION_PROBABILITY = 0.25  # DEFAULT PROBABILITY FOR ADDING EACH RANDOM EDGE (independently of other edges) FROM EAC NODE (independently from other nodes)...
+
+                else:
+                    NUM_RANDOM_EDGES = int(my_option_list[1])
+                    EDGE_ADDITION_PROBABILITY = float(my_option_list[2])
+
+                # CHECK APPROPIATENESS OF INPUT AND RUN THE ROUTINE...
+                if NUM_RANDOM_EDGES - 1 not in range(5):
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Too many random edges requested. Should be from {1,2,...,5}. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+                elif EDGE_ADDITION_PROBABILITY < 0 or EDGE_ADDITION_PROBABILITY > 1:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Not appropriate value was given for EDGE_ADDITION PROBABILITY. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+                else:
+                    # G =
+                    STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES,
+                                                         EDGE_ADDITION_PROBABILITY)
+
+        elif my_option_list[0] == 'H':  # 2.2: ADD HAMILTON CYCLE...
+
+            # G =
+            STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list)
+
+        elif my_option_list[0] == 'P':  # 2.3: PLOT G...
+            print("Printing graph G with", G.number_of_nodes(), "vertices,", G.number_of_edges(), "edges and",
+                  nx.number_connected_components(G), "connected components.")
+
+            if len(my_option_list) > 2:
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
-                print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible input was provided. Try again..." + bcolors.ENDC)
+                print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
                 print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+            else:
+                if len(my_option_list) <= 1:
+                    graph_layout = 'spring'  # ...DEFAULT graph_layout value...
+
+                else:  # ...len(my_option_list) == 2...
+                    graph_layout = str(my_option_list[1])
+
+                if graph_layout not in ['spring', 'random', 'circular', 'shell']:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice for graph layout. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+                else:
+                    if len(my_option_list) == 2:
+                        node_positions = []  # ...ERASE previous node positions...
+
+                    node_positions = my_graph_plot_routine(G, 'grey', 'blue', 'solid', graph_layout, node_positions)
+
+        elif my_option_list[0] == 'C':  # 2.4: COMPUTE ONE-SHOT GN-COMMUNITIES
+            NUM_OPTIONS = len(my_option_list)
+
+            if NUM_OPTIONS > 3:
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+            else:
+                if NUM_OPTIONS == 1:
+                    alg_choice = 'N'  # DEFAULT COMM-DETECTION ALGORITHM == NX_GN
+                    graph_layout = 'spring'  # DEFAULT graph layout == spring
+
+                elif NUM_OPTIONS == 2:
+                    alg_choice = str(my_option_list[1])
+                    graph_layout = 'spring'  # DEFAULT graph layout == spring
+
+                else:  # ...NUM_OPTIONS == 3...
+                    alg_choice = str(my_option_list[1])
+                    graph_layout = str(my_option_list[2])
+
+                # CHECKING CORRECTNESS OF GIVWEN PARAMETERS...
+                if alg_choice == 'N' and graph_layout in ['spring', 'circular', 'random', 'shell']:
+                    STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positions)
+
+                elif alg_choice == 'O' and graph_layout in ['spring', 'circular', 'random', 'shell']:
+                    STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_positions)
+
+                else:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible parameters for executing the GN-algorithm. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+        elif my_option_list[0] == 'D':  # 2.5: COMUTE A BINARY HIERARCHY OF COMMUNITY PARRTITIONS
+            NUM_OPTIONS = len(my_option_list)
+            NUM_NODES = G.number_of_nodes()
+            NUM_COMPONENTS = nx.number_connected_components(G)
+            MAX_NUM_DIVISIONS = min(8 * NUM_COMPONENTS, np.floor(NUM_NODES / 4))
+
+            if NUM_OPTIONS > 3:
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+            else:
+                if NUM_OPTIONS == 1:
+                    number_of_divisions = 2 * NUM_COMPONENTS  # DEFAULT number of communities to look for
+                    graph_layout = 'spring'  # DEFAULT graph layout == spring
+
+                elif NUM_OPTIONS == 2:
+                    number_of_divisions = int(my_option_list[1])
+                    graph_layout = 'spring'  # DEFAULT graph layout == spring
+
+                else:  # ...NUM_OPTIONS == 3...
+                    number_of_divisions = int(my_option_list[1])
+                    graph_layout = str(my_option_list[2])
+
+                # CHECKING SYNTAX OF GIVEN PARAMETERS...
+                if number_of_divisions < NUM_COMPONENTS or number_of_divisions > MAX_NUM_DIVISIONS:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(bcolors.WARNING + "\tERROR MESSAGE: The graph has already", NUM_COMPONENTS,
+                          "connected components." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\tProvide a number of divisions in { ", NUM_COMPONENTS, ",",
+                          MAX_NUM_DIVISIONS, "}. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+                elif graph_layout not in ['spring', 'random', 'circular', 'shell']:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice of a graph layout. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+                else:
+                    STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout, node_positions)
+
+        elif my_option_list[
+            0] == 'M':  # 2.6: DETERMINE PARTITION OF MIN-MODULARITY, FOR A GIVEN BINARY HIERARCHY OF COMMUNITY PARTITIONS
+            STUDENT_AM_determine_opt_community_structure(G, hierarchy_of_community_tuples)
+
+
+        elif my_option_list[0] == 'V':  # 2.7: VISUALIZE COMMUNITIES WITHIN GRAPH
+
+            NUM_OPTIONS = len(my_option_list)
+
+            if NUM_OPTIONS > 2:
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                print(bcolors.WARNING + "\tERROR MESSAGE: Wrong number of parameters. Try again..." + bcolors.ENDC)
+                print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+            else:
+
+                if NUM_OPTIONS == 1:
+                    graph_layout = 'spring'  # DEFAULT graph layout == spring
+
+                else:  # ...NUM_OPTIONS == 2...
+                    graph_layout = str(my_option_list[1])
+
+                if graph_layout not in ['spring', 'random', 'circular', 'shell']:
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+                    print(
+                        bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible choice of a graph layout. Try again..." + bcolors.ENDC)
+                    print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+
+                else:
+                    STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_positions)
+
+        elif my_option_list[0] == 'E':
+            # EXIT the program execution...
+            quit()
+
+        else:
+            print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
+            print(bcolors.WARNING + "\tERROR MESSAGE: Incomprehensible input was provided. Try again..." + bcolors.ENDC)
+            print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
     ### MENU 2 ENDS: detect communities in the constructed graph ### 
+
 
 ########################################################################################
 ############################### MY ROUTINES LIBRARY ENDS ############################### 
@@ -448,7 +469,42 @@ def my_menu_community_detection(G,node_names_list,node_positions,hierarchy_of_co
 
 ########################################################################################
 def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
+    # Load to dataframe NUM_LINK edges
+    fb_links_df = pd.read_csv("fb-pages-food.edges", nrows=NUM_LINKS)
+    print("\n FB LINKS DATAFRAME OF ", NUM_LINKS, " EDGES \n", fb_links_df)
 
+    # Dataframe to list of tuples
+    fb_links_tuples = fb_links_df.to_records(index=False)
+    fb_links_tuples_list = list(fb_links_tuples)
+    #print(fb_links_tuples_list)
+
+    # Remove loop-edges
+    loopless_links_list = []
+    for i in range(len(fb_links_tuples_list)):
+        tup = fb_links_tuples_list[i]
+        if tup[0] == tup[1]:
+            print("\n Removed loop-edge: ", fb_links_tuples_list[i])
+        else:
+            loopless_links_list.append(tup)
+
+    #print(loopless_links_list)
+
+    # Create fb_links_loopless_df dataframe
+    fb_links_loopless_df = pd.DataFrame.from_records(loopless_links_list, columns=['node_1', 'node_2'])
+    print("\n FB LINKS LOOPLESS DATAFRAME \n", fb_links_loopless_df)
+
+    # List of node names
+    nodes_1 = list(fb_links_loopless_df['node_1'])
+    nodes_2 = list(fb_links_loopless_df['node_2'])
+    node_names_list = nodes_1 + nodes_2
+    node_names_list = list(set(node_names_list))
+    print("\n Node names list: ", node_names_list)
+
+    # Print graph of fb_links_loopless_df
+    G = nx.from_pandas_edgelist(fb_links_loopless_df, "node_1", "node_2", create_using=nx.Graph())
+    my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
+
+    """
     print(bcolors.ENDC + "\t" + '''
         ########################################################################################
         # CREATE GRAPH FROM EDGE_CSV DATA 
@@ -470,16 +526,17 @@ def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
             + '''creates the graph from a dataframe representing its edges,
                  one per edge, in two columns representing the tail-node 
                  (node_1) and the head-node (node_2) of the edge.\n''')
+    """
+
 
 ######################################################################################################################
 # ...(a) STUDENT_AM IMPLEMENTATION OF ONE-SHOT GN-ALGORITHM...
 ######################################################################################################################
-def STUDENT_AM_one_shot_girvan_newman_for_communities(G,graph_layout,node_positions):
-
-    print(  bcolors.ENDC 
-            + "\tCalling routine " 
-            + bcolors.HEADER + "STUDENT_AM_one_shot_girvan_newman_for_communities(G,graph_layout,node_positions)\n" 
-            + bcolors.ENDC)
+def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_positions):
+    print(bcolors.ENDC
+          + "\tCalling routine "
+          + bcolors.HEADER + "STUDENT_AM_one_shot_girvan_newman_for_communities(G,graph_layout,node_positions)\n"
+          + bcolors.ENDC)
 
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
@@ -503,32 +560,35 @@ def STUDENT_AM_one_shot_girvan_newman_for_communities(G,graph_layout,node_positi
 
     start_time = time.time()
 
-    print(bcolors.ENDC  + "\tUSEFUL FUNCTIONS:")
- 
-    print(bcolors.ENDC  + "\t\t"    + bcolors.OKCYAN    + "sorted(nx.connected_components(G), key=len, reverse=True) " + bcolors.ENDC 
-                        + "initiates the community_tuples with the node-sets of the connected components of the graph G, sorted by their size")
- 
-    print(bcolors.ENDC  + "\t\t"    + bcolors.OKCYAN    + "G.subgraph(X).copy() " 
-                                    + bcolors.ENDC      + "creates the subgraph of G induced by a subset (even in list format) X of nodes.")
- 
-    print(bcolors.ENDC  + "\t\t"    + bcolors.OKCYAN    + "edge_betweenness_centrality(...) " 
-                                    + bcolors.ENDC      + "of networkx.algorithms.centrality computes edge-betweenness values.")
- 
-    print(bcolors.ENDC  + "\t\t"    + bcolors.OKCYAN    + "is_connected(G) " 
-                                    + bcolors.ENDC      + "of networkx checks connectedness of G.\n")
-   
+    print(bcolors.ENDC + "\tUSEFUL FUNCTIONS:")
+
+    print(
+        bcolors.ENDC + "\t\t" + bcolors.OKCYAN + "sorted(nx.connected_components(G), key=len, reverse=True) " + bcolors.ENDC
+        + "initiates the community_tuples with the node-sets of the connected components of the graph G, sorted by their size")
+
+    print(bcolors.ENDC + "\t\t" + bcolors.OKCYAN + "G.subgraph(X).copy() "
+          + bcolors.ENDC + "creates the subgraph of G induced by a subset (even in list format) X of nodes.")
+
+    print(bcolors.ENDC + "\t\t" + bcolors.OKCYAN + "edge_betweenness_centrality(...) "
+          + bcolors.ENDC + "of networkx.algorithms.centrality computes edge-betweenness values.")
+
+    print(bcolors.ENDC + "\t\t" + bcolors.OKCYAN + "is_connected(G) "
+          + bcolors.ENDC + "of networkx checks connectedness of G.\n")
+
     end_time = time.time()
-   
-    print(bcolors.ENDC  + "\t===================================================")
-    print(bcolors.ENDC  + "\tYOUR OWN computation of ONE-SHOT Girvan-Newman clustering for a graph with",G.number_of_nodes(),"nodes and",G.number_of_edges(),"links. "
-                        + "Computation time =", end_time - start_time,"\n")
+
+    print(bcolors.ENDC + "\t===================================================")
+    print(bcolors.ENDC + "\tYOUR OWN computation of ONE-SHOT Girvan-Newman clustering for a graph with",
+          G.number_of_nodes(), "nodes and", G.number_of_edges(), "links. "
+          + "Computation time =", end_time - start_time, "\n")
+
 
 ######################################################################################################################
 # ...(b) USE NETWORKX IMPLEMENTATION OF ONE-SHOT GN-ALGORITHM...
 ######################################################################################################################
-def STUDENT_AM_use_nx_girvan_newman_for_communities(G,graph_layout,node_positions):
-
-    print(bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_use_nx_girvan_newman_for_communities(G,graph_layout,node_positions)" + bcolors.ENDC +"\n")
+def STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positions):
+    print(
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_use_nx_girvan_newman_for_communities(G,graph_layout,node_positions)" + bcolors.ENDC + "\n")
 
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
@@ -549,20 +609,22 @@ def STUDENT_AM_use_nx_girvan_newman_for_communities(G,graph_layout,node_position
 
     start_time = time.time()
 
-    print(bcolors.ENDC  + "USEFUL FUNCTIONS:")
-    print(  bcolors.ENDC    + "\t\t" + bcolors.OKCYAN + "girvan_newman(...) " 
-            + bcolors.ENDC  + "from networkx.algorithms.community, provides the requiured list of K+1 community-tuples.\n")
+    print(bcolors.ENDC + "USEFUL FUNCTIONS:")
+    print(bcolors.ENDC + "\t\t" + bcolors.OKCYAN + "girvan_newman(...) "
+          + bcolors.ENDC + "from networkx.algorithms.community, provides the requiured list of K+1 community-tuples.\n")
 
     end_time = time.time()
 
-    print(bcolors.ENDC  + "\t===================================================")
-    print(bcolors.ENDC  + "\tBUILT-IN computation of ONE-SHOT Girvan-Newman clustering for a graph with",G.number_of_nodes(),"nodes and",G.number_of_edges(),"links. "
-                        + "Computation time =", end_time - start_time,"\n")
+    print(bcolors.ENDC + "\t===================================================")
+    print(bcolors.ENDC + "\tBUILT-IN computation of ONE-SHOT Girvan-Newman clustering for a graph with",
+          G.number_of_nodes(), "nodes and", G.number_of_edges(), "links. "
+          + "Computation time =", end_time - start_time, "\n")
+
 
 ######################################################################################################################
-def STUDENT_AM_divisive_community_detection(G,number_of_divisions,graph_layout,node_positions):
-
-    print(bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_divisive_community_detection(G,number_of_divisions,graph_layout,node_positions)" + bcolors.ENDC +"\n")
+def STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout, node_positions):
+    print(
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_divisive_community_detection(G,number_of_divisions,graph_layout,node_positions)" + bcolors.ENDC + "\n")
 
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
@@ -593,32 +655,35 @@ def STUDENT_AM_divisive_community_detection(G,number_of_divisions,graph_layout,n
 
     start_time = time.time()
 
-    print(bcolors.ENDC  + "\tUSEFUL FUNCTIONS:")
+    print(bcolors.ENDC + "\tUSEFUL FUNCTIONS:")
 
-    print(bcolors.ENDC  + "\t\t" 
-                        + bcolors.OKCYAN    + "girvan_newman(...) " 
-                        + bcolors.ENDC      + "from networkx.algorithms.community, provides TWO communities for a given CONNECTED graph.")
+    print(bcolors.ENDC + "\t\t"
+          + bcolors.OKCYAN + "girvan_newman(...) "
+          + bcolors.ENDC + "from networkx.algorithms.community, provides TWO communities for a given CONNECTED graph.")
 
-    print(bcolors.ENDC  + "\t\t"
-                        + bcolors.OKCYAN    + "G.subgraph(X) " 
-                        + bcolors.ENDC      + "extracts the induced subgraph of G, for a given subset X of nodes.") 
+    print(bcolors.ENDC + "\t\t"
+          + bcolors.OKCYAN + "G.subgraph(X) "
+          + bcolors.ENDC + "extracts the induced subgraph of G, for a given subset X of nodes.")
 
-    print(bcolors.ENDC  + "\t\t" 
-                        + bcolors.OKCYAN    + "community_tuples.pop(GiantCommunityIndex) " 
-                        + bcolors.ENDC      + "removes the giant community's tuple (to be split) from the community_tuples data structure.")
-    print(bcolors.ENDC  + "\t\t"    
-                        + bcolors.OKCYAN    + "community_tuples.append(...) " 
-                        + bcolors.ENDC      + "can add the computed subcommunities' tuples, in substitution of the giant component.")    
+    print(bcolors.ENDC + "\t\t"
+          + bcolors.OKCYAN + "community_tuples.pop(GiantCommunityIndex) "
+          + bcolors.ENDC + "removes the giant community's tuple (to be split) from the community_tuples data structure.")
+    print(bcolors.ENDC + "\t\t"
+          + bcolors.OKCYAN + "community_tuples.append(...) "
+          + bcolors.ENDC + "can add the computed subcommunities' tuples, in substitution of the giant component.")
 
     end_time = time.time()
-    print(bcolors.ENDC  + "\t===================================================")
-    print(bcolors.ENDC  + "\tComputation of HIERARCHICAL BIPARTITION of G in communities, "
-                        + "using the BUILT-IN girvan-newman algorithm, for a graph with",G.number_of_nodes(),"nodes and",G.number_of_edges(),"links. "
-                        + "Computation time =", end_time - start_time,"\n")
+    print(bcolors.ENDC + "\t===================================================")
+    print(bcolors.ENDC + "\tComputation of HIERARCHICAL BIPARTITION of G in communities, "
+          + "using the BUILT-IN girvan-newman algorithm, for a graph with", G.number_of_nodes(), "nodes and",
+          G.number_of_edges(), "links. "
+          + "Computation time =", end_time - start_time, "\n")
+
 
 ######################################################################################################################
-def STUDENT_AM_determine_opt_community_structure(G,hierarchy_of_community_tuples):
-    print(bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_determine_opt_community_structure(G,hierarchy_of_community_tuples)" + bcolors.ENDC +"\n")
+def STUDENT_AM_determine_opt_community_structure(G, hierarchy_of_community_tuples):
+    print(
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_determine_opt_community_structure(G,hierarchy_of_community_tuples)" + bcolors.ENDC + "\n")
 
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
@@ -640,10 +705,11 @@ def STUDENT_AM_determine_opt_community_structure(G,hierarchy_of_community_tuples
         ######################################################################################################################
         ''')
 
-######################################################################################################################
-def STUDENT_AM_add_hamilton_cycle_to_graph(G,node_names_list):
 
-    print(bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_add_hamilton_cycle_to_graph(G,node_names_list)" + bcolors.ENDC +"\n")
+######################################################################################################################
+def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
+    print(
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_add_hamilton_cycle_to_graph(G,node_names_list)" + bcolors.ENDC + "\n")
 
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
@@ -656,20 +722,20 @@ def STUDENT_AM_add_hamilton_cycle_to_graph(G,node_names_list):
         ######################################################################################################################
     ''')
 
-    print(  bcolors.ENDC        + "\tUSEFUL FUNCTIONS:") 
+    print(bcolors.ENDC + "\tUSEFUL FUNCTIONS:")
 
     print("\t\t"
-            + bcolors.OKCYAN    + "my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions) " 
-            + bcolors.ENDC      + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
-    
+          + bcolors.OKCYAN + "my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions) "
+          + bcolors.ENDC + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
+
+
 ######################################################################################################################
 # ADD RANDOM EDGES TO A GRAPH...
 ######################################################################################################################
-def STUDENT_AM_add_random_edges_to_graph(G,node_names_list,NUM_RANDOM_EDGES,EDGE_ADDITION_PROBABILITY):
-
-    print(  bcolors.ENDC     + "\tCalling routine " 
-            + bcolors.HEADER + "STUDENT_AM_add_random_edges_to_graph(G,node_names_list,NUM_RANDOM_EDGES,EDGE_ADDITION_PROBABILITY)" 
-            + bcolors.ENDC   + "\n")
+def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, EDGE_ADDITION_PROBABILITY):
+    print(bcolors.ENDC + "\tCalling routine "
+          + bcolors.HEADER + "STUDENT_AM_add_random_edges_to_graph(G,node_names_list,NUM_RANDOM_EDGES,EDGE_ADDITION_PROBABILITY)"
+          + bcolors.ENDC + "\n")
 
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
@@ -686,28 +752,34 @@ def STUDENT_AM_add_random_edges_to_graph(G,node_names_list,NUM_RANDOM_EDGES,EDGE
         ######################################################################################################################
     ''')
 
-    print(bcolors.ENDC          + "\tUSEFUL FUNCTIONS:")
-    print("\t\t" 
-            + bcolors.OKCYAN    + "my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions) " 
-            + bcolors.ENDC      + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
+    print(bcolors.ENDC + "\tUSEFUL FUNCTIONS:")
+    print("\t\t"
+          + bcolors.OKCYAN + "my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions) "
+          + bcolors.ENDC + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
+
 
 ######################################################################################################################
 # VISUALISE COMMUNITIES WITHIN A GRAPH
 ######################################################################################################################
-def STUDENT_AM_visualize_communities(G,community_tuples,graph_layout,node_positions):
+def STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_positions):
+    print(bcolors.ENDC + "\tCalling routine "
+          + bcolors.HEADER + "STUDENT_AM_visualize_communities(G,community_tuples,graph_layout,node_positions)" + bcolors.ENDC + "\n")
 
-    print(bcolors.ENDC      + "\tCalling routine " 
-                            + bcolors.HEADER + "STUDENT_AM_visualize_communities(G,community_tuples,graph_layout,node_positions)" + bcolors.ENDC +"\n")
+    print(
+        bcolors.ENDC + "\tINPUT: A graph G, and a list of lists/tuples each of which contains the nodes of a different community.")
+    print(
+        bcolors.ENDC + "\t\t The graph_layout parameter determines how the " + bcolors.OKCYAN + "my_graph_plot_routine will position the nodes in the plane.")
+    print(
+        bcolors.ENDC + "\t\t The node_positions list contains an existent placement of the nodes in the plane. If empty, a new positioning will be created by the " + bcolors.OKCYAN + "my_graph_plot_routine" + bcolors.ENDC + ".\n")
 
-    print(bcolors.ENDC      + "\tINPUT: A graph G, and a list of lists/tuples each of which contains the nodes of a different community.")
-    print(bcolors.ENDC      + "\t\t The graph_layout parameter determines how the " + bcolors.OKCYAN + "my_graph_plot_routine will position the nodes in the plane.")
-    print(bcolors.ENDC      + "\t\t The node_positions list contains an existent placement of the nodes in the plane. If empty, a new positioning will be created by the " + bcolors.OKCYAN + "my_graph_plot_routine" + bcolors.ENDC +".\n")
- 
-    print(bcolors.ENDC      + "\tOUTPUT: Plot the graph using a different color per community.\n")
+    print(bcolors.ENDC + "\tOUTPUT: Plot the graph using a different color per community.\n")
 
-    print(bcolors.ENDC      + "\tUSEFUL FUNCTIONS:")
-    print(bcolors.OKCYAN    + "\t\tmy_random_color_list_generator(number_of_communities)" + bcolors.ENDC + " initiates a list of random colors for the communities.")
-    print(bcolors.OKCYAN    + "\t\tmy_graph_plot_routine(G,node_colors,'blue','solid',graph_layout,node_positions)" + bcolors.ENDC + " plots the graph with the chosen node colors, and (blue color,solid style) for the edges.")
+    print(bcolors.ENDC + "\tUSEFUL FUNCTIONS:")
+    print(
+        bcolors.OKCYAN + "\t\tmy_random_color_list_generator(number_of_communities)" + bcolors.ENDC + " initiates a list of random colors for the communities.")
+    print(
+        bcolors.OKCYAN + "\t\tmy_graph_plot_routine(G,node_colors,'blue','solid',graph_layout,node_positions)" + bcolors.ENDC + " plots the graph with the chosen node colors, and (blue color,solid style) for the edges.")
+
 
 ########################################################################################
 ########################### STUDENT_AM ROUTINES LIBRARY ENDS ###########################
@@ -719,12 +791,12 @@ def STUDENT_AM_visualize_communities(G,community_tuples,graph_layout,node_positi
 ########################################################################################
 
 ############################### GLOBAL INITIALIZATIONS #################################
-G = nx.Graph()                      # INITIALIZATION OF THE GRAPH TO BE CONSTRUCTED
+G = nx.Graph()  # INITIALIZATION OF THE GRAPH TO BE CONSTRUCTED
 node_names_list = []
-node_positions = []                 # INITIAL POSITIONS OF NODES ON THE PLANE ARE UNDEFINED...
-community_tuples = []               # INITIALIZATION OF LIST OF COMMUNITY TUPLES...
+node_positions = []  # INITIAL POSITIONS OF NODES ON THE PLANE ARE UNDEFINED...
+community_tuples = []  # INITIALIZATION OF LIST OF COMMUNITY TUPLES...
 hierarchy_of_community_tuples = []  # INITIALIZATION OF HIERARCHY OF COMMUNITY TUPLES
 
-G,node_names_list,node_positions = my_menu_graph_construction(G,node_names_list,node_positions)
+G, node_names_list, node_positions = my_menu_graph_construction(G, node_names_list, node_positions)
 
-my_menu_community_detection(G,node_names_list,node_positions,hierarchy_of_community_tuples)
+my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of_community_tuples)
