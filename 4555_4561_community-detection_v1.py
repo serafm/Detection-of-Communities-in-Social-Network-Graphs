@@ -470,7 +470,10 @@ def my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of
 ########################################################################################
 global loopless_links_list
 loopless_links_list = []
+
+
 def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
+    global loopless_links_list
     # Load to dataframe NUM_LINK edges
     fb_links_df = pd.read_csv("fb-pages-food.edges", nrows=NUM_LINKS)
     print("\n FB LINKS DATAFRAME OF ", NUM_LINKS, " EDGES \n", fb_links_df)
@@ -710,6 +713,18 @@ def STUDENT_AM_determine_opt_community_structure(G, hierarchy_of_community_tuple
 
 ######################################################################################################################
 def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
+    hamilton = []
+    for node in range(len(node_names_list)):
+        if node+1 < len(node_names_list):
+            G.add_edge(node_names_list[node], node_names_list[node+1])
+            hamilton.append((node_names_list[node], node_names_list[node+1]))
+        else:
+            G.add_edge(node_names_list[0],node_names_list[node])
+            hamilton.append((node_names_list[0],node_names_list[node]))
+
+    my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
+
+    """
     print(
         bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_add_hamilton_cycle_to_graph(G,node_names_list)" + bcolors.ENDC + "\n")
 
@@ -729,13 +744,13 @@ def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
     print("\t\t"
           + bcolors.OKCYAN + "my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions) "
           + bcolors.ENDC + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
-
+    """
 
 ######################################################################################################################
 # ADD RANDOM EDGES TO A GRAPH...
 ######################################################################################################################
 def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, EDGE_ADDITION_PROBABILITY):
-    global loopless_links_list
+    loopless_links_list = G.edges
     # initialize neighbors dictionary
     neighbors_of = dict()
     not_neighbors_of = dict()
@@ -757,27 +772,20 @@ def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, E
                 if i not in neighbors_of[key]:
                     not_neighbors_of[key].append(i)
 
-    new_edges_to_add = []
 
     # Add random (X,Y) edges
     for X in node_names_list:
         for i in range(NUM_RANDOM_EDGES):
             if len(not_neighbors_of[X]) > 0:
                 Y = random.choice(not_neighbors_of[X])
-                not_neighbors_of[X].remove(Y)
                 # random coin-flip(select) a number between [0,1]
                 coin_flip = random.uniform(0, 1)
                 if coin_flip > EDGE_ADDITION_PROBABILITY:
-                    new_edges_to_add.append((X, Y))
-
-    loopless_links_list = loopless_links_list + new_edges_to_add
+                    G.add_edge(X,Y)
+                    not_neighbors_of[X].remove(Y)
 
     # Print the graph with new edges
-    fb_links_loopless_df = pd.DataFrame.from_records(loopless_links_list, columns=['node_1', 'node_2'])
-    G = nx.from_pandas_edgelist(fb_links_loopless_df, "node_1", "node_2", create_using=nx.Graph())
     my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
-
-
 
     """
     print(bcolors.ENDC + "\tCalling routine "
