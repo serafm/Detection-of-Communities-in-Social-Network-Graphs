@@ -1,13 +1,18 @@
+import itertools
+
 import pandas as pd
 import numpy as np
 import random
 import networkx as nx
+from networkx.algorithms.community import girvan_newman
 from tqdm import tqdm
 import time
 import matplotlib.pyplot as plt
-from networkx.algorithms import community as comm
+from networkx.algorithms import community as comm, community
 from networkx.algorithms import centrality as cntr
 import os
+import igraph as ig
+
 
 
 ############################### FG COLOR DEFINITIONS ###############################
@@ -481,10 +486,10 @@ def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
     # Dataframe to list of tuples
     fb_links_tuples = fb_links_df.to_records(index=False)
     fb_links_tuples_list = list(fb_links_tuples)
-    #print(fb_links_tuples_list)
+    # print(fb_links_tuples_list)
 
     # Remove loop-edges
-    #loopless_links_list = []
+    # loopless_links_list = []
     for i in range(len(fb_links_tuples_list)):
         tup = fb_links_tuples_list[i]
         if tup[0] == tup[1]:
@@ -492,7 +497,7 @@ def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
         else:
             loopless_links_list.append(tup)
 
-    #print(loopless_links_list)
+    # print(loopless_links_list)
 
     # Create fb_links_loopless_df dataframe
     fb_links_loopless_df = pd.DataFrame.from_records(loopless_links_list, columns=['node_1', 'node_2'])
@@ -537,12 +542,44 @@ def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
 ######################################################################################################################
 # ...(a) STUDENT_AM IMPLEMENTATION OF ONE-SHOT GN-ALGORITHM...
 ######################################################################################################################
+
+def edge_to_remove(graph):
+    G_dict = nx.edge_betweenness_centrality(graph)
+    edge = ()
+
+    # extract the edge with highest edge betweenness centrality score
+    for key, value in sorted(G_dict.items(), key=lambda item: item[1], reverse=True):
+        edge = key
+        break
+
+    return edge
+
+
 def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_positions):
     print(bcolors.ENDC
           + "\tCalling routine "
           + bcolors.HEADER + "STUDENT_AM_one_shot_girvan_newman_for_communities(G,graph_layout,node_positions)\n"
           + bcolors.ENDC)
 
+    # find number of connected components
+    sg = nx.connected_components(G)
+    sg_count = nx.number_connected_components(G)
+
+    while (sg_count == 1):
+        G.remove_edge(edge_to_remove(G)[0], edge_to_remove(G)[1])
+        sg = nx.connected_components(G)
+        sg_count = nx.number_connected_components(G)
+
+    print("Components: ", list(sg))
+
+    # find the nodes forming the communities
+    node_groups = []
+
+    for i in list(sg):
+        node_groups.append(list(i))
+
+    print(node_groups)
+    """
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
         # PROVIDE YOUR OWN ROUTINE WHICH CREATES K+1 COMMUNITIES FOR A GRAPH WITH K CONNECTED COMPONENTS, AS FOLLOWS:
@@ -561,7 +598,8 @@ def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_posi
         # ...THE NODE-LISTS OF THE TWO COMPONENTS OF GCC (AFTER THE EDGE REMOVALS) ARE THE NEW SUBCOMMUNITIES THAT SUBSTITUTE LC 
         # IN THE LIST community_tuples, AS SUGGESTED BY THE GIRVAN-NEWMAN ALGORITHM...
         ######################################################################################################################
-''')
+    ''')
+    """
 
     start_time = time.time()
 
@@ -594,7 +632,17 @@ def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_posi
 def STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positions):
     print(
         bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_use_nx_girvan_newman_for_communities(G,graph_layout,node_positions)" + bcolors.ENDC + "\n")
+    K=[]
+    k = 2
+    comp = girvan_newman(G)
+    for communities in itertools.islice(comp, k):
+        K = list(tuple(sorted(c) for c in communities))
+        print(tuple(sorted(c) for c in communities))
 
+    my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
+
+
+    """
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
         # USE THE BUILT-IN ROUTINE OF NETWORKX FOR CREATING K+1 COMMUNITIES FOR A GRAPH WITH K CONNECTED COMPONENTS, WHERE 
@@ -610,7 +658,8 @@ def STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positi
         # PSEUDOCODE:    
         #   ...simple...
         ######################################################################################################################
-''')
+    ''')
+    """
 
     start_time = time.time()
 
@@ -625,12 +674,26 @@ def STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positi
           G.number_of_nodes(), "nodes and", G.number_of_edges(), "links. "
           + "Computation time =", end_time - start_time, "\n")
 
+    return K
+
 
 ######################################################################################################################
 def STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout, node_positions):
     print(
         bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_divisive_community_detection(G,number_of_divisions,graph_layout,node_positions)" + bcolors.ENDC + "\n")
 
+    K = STUDENT_AM_use_nx_girvan_newman_for_communities(G, 'circular', '')
+    print("Communities:", K)
+
+    temp = 0
+    for edges in K:
+        max = nx.edge_betweenness_centrality(G)
+        print("Max:",max)
+        if max > temp:
+            temp = max
+    print("Temp:",temp)
+
+    """
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
         # CREATE HIERARCHY OF num_divisions COMMUNITIES FOR A GRAPH WITH num_components CONNECTED COMPONENTS, WHERE 
@@ -656,7 +719,8 @@ def STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout
         #       COMMUNITY TO BE REMOVED, UNTIL DISCONNECTION. 
         #   UNTIL num_communities REACHES THE REQUIRED NUMBER num_divisions OF COMMUNITIES
         ######################################################################################################################
-''')
+    ''')
+    """
 
     start_time = time.time()
 
@@ -715,12 +779,12 @@ def STUDENT_AM_determine_opt_community_structure(G, hierarchy_of_community_tuple
 def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
     hamilton = []
     for node in range(len(node_names_list)):
-        if node+1 < len(node_names_list):
-            G.add_edge(node_names_list[node], node_names_list[node+1])
-            hamilton.append((node_names_list[node], node_names_list[node+1]))
+        if node + 1 < len(node_names_list):
+            G.add_edge(node_names_list[node], node_names_list[node + 1])
+            hamilton.append((node_names_list[node], node_names_list[node + 1]))
         else:
-            G.add_edge(node_names_list[0],node_names_list[node])
-            hamilton.append((node_names_list[0],node_names_list[node]))
+            G.add_edge(node_names_list[0], node_names_list[node])
+            hamilton.append((node_names_list[0], node_names_list[node]))
 
     my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
 
@@ -745,6 +809,7 @@ def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
           + bcolors.OKCYAN + "my_graph_plot_routine(G,'grey','blue','solid',graph_layout,node_positions) "
           + bcolors.ENDC + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
     """
+
 
 ######################################################################################################################
 # ADD RANDOM EDGES TO A GRAPH...
@@ -772,7 +837,6 @@ def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, E
                 if i not in neighbors_of[key]:
                     not_neighbors_of[key].append(i)
 
-
     # Add random (X,Y) edges
     for X in node_names_list:
         for i in range(NUM_RANDOM_EDGES):
@@ -781,7 +845,7 @@ def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, E
                 # random coin-flip(select) a number between [0,1]
                 coin_flip = random.uniform(0, 1)
                 if coin_flip > EDGE_ADDITION_PROBABILITY:
-                    G.add_edge(X,Y)
+                    G.add_edge(X, Y)
                     not_neighbors_of[X].remove(Y)
 
     # Print the graph with new edges
@@ -813,6 +877,7 @@ def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, E
           + bcolors.ENDC + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
     """
 
+
 ######################################################################################################################
 # VISUALISE COMMUNITIES WITHIN A GRAPH
 ######################################################################################################################
@@ -820,6 +885,25 @@ def STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_pos
     print(bcolors.ENDC + "\tCalling routine "
           + bcolors.HEADER + "STUDENT_AM_visualize_communities(G,community_tuples,graph_layout,node_positions)" + bcolors.ENDC + "\n")
 
+    # plot the communities
+    community_tuples = STUDENT_AM_use_nx_girvan_newman_for_communities(G, 'circular', '')
+    print(community_tuples)
+    color_map = []
+    colors = ["lightcoral", "gray", "lightgray", "firebrick", "red", "chocolate", "darkorange", "moccasin", "gold", "yellow", "darkolivegreen", "chartreuse", "forestgreen", "lime", "mediumaquamarine", "turquoise", "teal", "cadetblue", "dogerblue", "blue", "slateblue", "blueviolet", "magenta", "lightsteelblue"]
+    for com in community_tuples:
+        color = random.choice(colors)
+        for node in com:
+            color_map.insert(node, color)
+        colors.remove(color)
+
+
+    print("color_map: ", color_map)
+    print(len(color_map))
+    nx.draw(G, node_color=color_map, with_labels=True)
+    plt.show()
+
+
+    """
     print(
         bcolors.ENDC + "\tINPUT: A graph G, and a list of lists/tuples each of which contains the nodes of a different community.")
     print(
@@ -834,7 +918,7 @@ def STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_pos
         bcolors.OKCYAN + "\t\tmy_random_color_list_generator(number_of_communities)" + bcolors.ENDC + " initiates a list of random colors for the communities.")
     print(
         bcolors.OKCYAN + "\t\tmy_graph_plot_routine(G,node_colors,'blue','solid',graph_layout,node_positions)" + bcolors.ENDC + " plots the graph with the chosen node colors, and (blue color,solid style) for the edges.")
-
+    """
 
 ########################################################################################
 ########################### STUDENT_AM ROUTINES LIBRARY ENDS ###########################
