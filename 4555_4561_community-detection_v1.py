@@ -1,18 +1,14 @@
 import itertools
-
 import pandas as pd
 import numpy as np
 import random
 import networkx as nx
-from networkx.algorithms.community import girvan_newman
-from tqdm import tqdm
+from networkx.algorithms.community import girvan_newman, modularity
+from numpy import partition
 import time
 import matplotlib.pyplot as plt
-from networkx.algorithms import community as comm, community
-from networkx.algorithms import centrality as cntr
+from networkx.algorithms import community
 import os
-import igraph as ig
-
 
 
 ############################### FG COLOR DEFINITIONS ###############################
@@ -150,7 +146,7 @@ def my_menu_graph_construction(G, node_names_list, node_positions):
                 else:
                     # LOAD GRAPH FROM DATA SET...
                     # G,node_names_list =
-                    STUDENT_AM_read_graph_from_csv(NUM_LINKS)
+                    G = STUDENT_4555_4561_read_graph_from_csv(NUM_LINKS)
                     print("\tConstructing the FB-FOOD graph with n =", G.number_of_nodes(),
                           "vertices and m =", G.number_of_edges(), "edges (after removal of loops).")
 
@@ -308,14 +304,13 @@ def my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of
                     print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
                 else:
-                    # G =
-                    STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES,
-                                                         EDGE_ADDITION_PROBABILITY)
+                    G = STUDENT_4555_4561_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES,
+                                                                    EDGE_ADDITION_PROBABILITY)
 
         elif my_option_list[0] == 'H':  # 2.2: ADD HAMILTON CYCLE...
 
-            # G =
-            STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list)
+            G = STUDENT_4555_4561_add_hamilton_cycle_to_graph(G, node_names_list)
+
 
         elif my_option_list[0] == 'P':  # 2.3: PLOT G...
             print("Printing graph G with", G.number_of_nodes(), "vertices,", G.number_of_edges(), "edges and",
@@ -368,10 +363,10 @@ def my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of
 
                 # CHECKING CORRECTNESS OF GIVWEN PARAMETERS...
                 if alg_choice == 'N' and graph_layout in ['spring', 'circular', 'random', 'shell']:
-                    STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positions)
+                    STUDENT_4555_4561_use_nx_girvan_newman_for_communities(G, graph_layout, node_positions)
 
                 elif alg_choice == 'O' and graph_layout in ['spring', 'circular', 'random', 'shell']:
-                    STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_positions)
+                    STUDENT_4555_4561_one_shot_girvan_newman_for_communities(G, graph_layout, node_positions)
 
                 else:
                     print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
@@ -419,11 +414,11 @@ def my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of
                     print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
                 else:
-                    STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout, node_positions)
+                    STUDENT_4555_4561_divisive_community_detection(G, number_of_divisions, graph_layout, node_positions)
 
         elif my_option_list[
             0] == 'M':  # 2.6: DETERMINE PARTITION OF MIN-MODULARITY, FOR A GIVEN BINARY HIERARCHY OF COMMUNITY PARTITIONS
-            STUDENT_AM_determine_opt_community_structure(G, hierarchy_of_community_tuples)
+            STUDENT_4555_4561_determine_opt_community_structure(G, hierarchy_of_community_tuples)
 
 
         elif my_option_list[0] == 'V':  # 2.7: VISUALIZE COMMUNITIES WITHIN GRAPH
@@ -450,7 +445,7 @@ def my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of
                     print(bcolors.WARNING + "\t++++++++++++++++++++++++++++++++++++++++" + bcolors.ENDC)
 
                 else:
-                    STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_positions)
+                    STUDENT_4555_4561_visualize_communities(G, community_tuples, graph_layout, node_positions)
 
         elif my_option_list[0] == 'E':
             # EXIT the program execution...
@@ -468,17 +463,18 @@ def my_menu_community_detection(G, node_names_list, node_positions, hierarchy_of
 ########################################################################################
 
 ########################################################################################
-########################## STUDENT_AM ROUTINES LIBRARY STARTS ##########################
+########################## STUDENT_4555_4561 ROUTINES LIBRARY STARTS ##########################
 # FILL IN THE REQUIRED ROUTINES FROM THAT POINT ON...
 ########################################################################################
 
 ########################################################################################
-global loopless_links_list
+global loopless_links_list, G, graph_nodes_list
 loopless_links_list = []
+graph_nodes_list = []
 
 
-def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
-    global loopless_links_list
+def STUDENT_4555_4561_read_graph_from_csv(NUM_LINKS):
+    global loopless_links_list, G, node_names_list, graph_nodes_list
     # Load to dataframe NUM_LINK edges
     fb_links_df = pd.read_csv("fb-pages-food.edges", nrows=NUM_LINKS)
     print("\n FB LINKS DATAFRAME OF ", NUM_LINKS, " EDGES \n", fb_links_df)
@@ -503,16 +499,24 @@ def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
     fb_links_loopless_df = pd.DataFrame.from_records(loopless_links_list, columns=['node_1', 'node_2'])
     print("\n FB LINKS LOOPLESS DATAFRAME \n", fb_links_loopless_df)
 
-    # List of node names
+    """
     nodes_1 = list(fb_links_loopless_df['node_1'])
     nodes_2 = list(fb_links_loopless_df['node_2'])
     node_names_list = nodes_1 + nodes_2
     node_names_list = list(set(node_names_list))
+    graph_nodes_list = node_names_list
     print("\n Node names list: ", node_names_list)
+    """
 
     # Print the graph of fb_links_loopless_df
     G = nx.from_pandas_edgelist(fb_links_loopless_df, "node_1", "node_2", create_using=nx.Graph())
     my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
+
+    # List of node names
+    node_names_list = list(G.nodes)
+    graph_nodes_list = node_names_list
+    print("\n Node names list: ", node_names_list)
+
 
     """
     print(bcolors.ENDC + "\t" + '''
@@ -538,9 +542,11 @@ def STUDENT_AM_read_graph_from_csv(NUM_LINKS):
                  (node_1) and the head-node (node_2) of the edge.\n''')
     """
 
+    return G
+
 
 ######################################################################################################################
-# ...(a) STUDENT_AM IMPLEMENTATION OF ONE-SHOT GN-ALGORITHM...
+# ...(a) STUDENT_4555_4561 IMPLEMENTATION OF ONE-SHOT GN-ALGORITHM...
 ######################################################################################################################
 
 def edge_to_remove(graph):
@@ -555,30 +561,33 @@ def edge_to_remove(graph):
     return edge
 
 
-def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_positions):
+def STUDENT_4555_4561_one_shot_girvan_newman_for_communities(G, graph_layout, node_positions):
     print(bcolors.ENDC
           + "\tCalling routine "
-          + bcolors.HEADER + "STUDENT_AM_one_shot_girvan_newman_for_communities(G,graph_layout,node_positions)\n"
+          + bcolors.HEADER + "STUDENT_4555_4561_one_shot_girvan_newman_for_communities(G,graph_layout,node_positions)\n"
           + bcolors.ENDC)
 
-    # find number of connected components
-    sg = nx.connected_components(G)
-    sg_count = nx.number_connected_components(G)
+    start_time = time.time()
 
-    while (sg_count == 1):
+    communities_list = []
+
+    connected_comps = nx.connected_components(G)
+    connected_comps_nums = nx.number_connected_components(G)
+
+    while connected_comps_nums == 1:
         G.remove_edge(edge_to_remove(G)[0], edge_to_remove(G)[1])
-        sg = nx.connected_components(G)
-        sg_count = nx.number_connected_components(G)
+        connected_comps = nx.connected_components(G)
+        connected_comps_nums = nx.number_connected_components(G)
 
-    print("Components: ", list(sg))
+    print("Number of connected components: ", connected_comps_nums)
 
-    # find the nodes forming the communities
-    node_groups = []
+    for i in connected_comps:
+        communities_list.append(tuple(i))
 
-    for i in list(sg):
-        node_groups.append(list(i))
+    print("Communities List: ", communities_list)
+    print("LC1: ", communities_list[0])
+    print("LC2: ", communities_list[1])
 
-    print(node_groups)
     """
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
@@ -601,8 +610,7 @@ def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_posi
     ''')
     """
 
-    start_time = time.time()
-
+    """
     print(bcolors.ENDC + "\tUSEFUL FUNCTIONS:")
 
     print(
@@ -617,6 +625,7 @@ def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_posi
 
     print(bcolors.ENDC + "\t\t" + bcolors.OKCYAN + "is_connected(G) "
           + bcolors.ENDC + "of networkx checks connectedness of G.\n")
+    """
 
     end_time = time.time()
 
@@ -625,22 +634,26 @@ def STUDENT_AM_one_shot_girvan_newman_for_communities(G, graph_layout, node_posi
           G.number_of_nodes(), "nodes and", G.number_of_edges(), "links. "
           + "Computation time =", end_time - start_time, "\n")
 
+    return communities_list
+
 
 ######################################################################################################################
 # ...(b) USE NETWORKX IMPLEMENTATION OF ONE-SHOT GN-ALGORITHM...
 ######################################################################################################################
-def STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positions):
+def STUDENT_4555_4561_use_nx_girvan_newman_for_communities(G, graph_layout, node_positions):
     print(
-        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_use_nx_girvan_newman_for_communities(G,graph_layout,node_positions)" + bcolors.ENDC + "\n")
-    K=[]
-    k = 2
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_4555_4561_use_nx_girvan_newman_for_communities(G,graph_layout,node_positions)" + bcolors.ENDC + "\n")
+
+    start_time = time.time()
+
+    K = []
+    k = 1
     comp = girvan_newman(G)
     for communities in itertools.islice(comp, k):
         K = list(tuple(sorted(c) for c in communities))
         print(tuple(sorted(c) for c in communities))
 
-    my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
-
+    # my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
 
     """
     print(bcolors.ENDC + "\t" + '''
@@ -661,11 +674,11 @@ def STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positi
     ''')
     """
 
-    start_time = time.time()
-
+    """
     print(bcolors.ENDC + "USEFUL FUNCTIONS:")
     print(bcolors.ENDC + "\t\t" + bcolors.OKCYAN + "girvan_newman(...) "
           + bcolors.ENDC + "from networkx.algorithms.community, provides the requiured list of K+1 community-tuples.\n")
+    """
 
     end_time = time.time()
 
@@ -677,21 +690,15 @@ def STUDENT_AM_use_nx_girvan_newman_for_communities(G, graph_layout, node_positi
     return K
 
 
+global list_of_tuples
+list_of_tuples = []
+
+
 ######################################################################################################################
-def STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout, node_positions):
+def STUDENT_4555_4561_divisive_community_detection(G, number_of_divisions, graph_layout, node_positions):
+    global list_of_tuples
     print(
-        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_divisive_community_detection(G,number_of_divisions,graph_layout,node_positions)" + bcolors.ENDC + "\n")
-
-    K = STUDENT_AM_use_nx_girvan_newman_for_communities(G, 'circular', '')
-    print("Communities:", K)
-
-    temp = 0
-    for edges in K:
-        max = nx.edge_betweenness_centrality(G)
-        print("Max:",max)
-        if max > temp:
-            temp = max
-    print("Temp:",temp)
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_4555_4561_divisive_community_detection(G,number_of_divisions,graph_layout,node_positions)" + bcolors.ENDC + "\n")
 
     """
     print(bcolors.ENDC + "\t" + '''
@@ -724,6 +731,29 @@ def STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout
 
     start_time = time.time()
 
+    LC = tuple(nx.connected_components(G))
+    K = STUDENT_4555_4561_one_shot_girvan_newman_for_communities(G, graph_layout, '')
+
+    for i in range(number_of_divisions - 1):
+        # nx.draw(G, with_labels=True)
+        # plt.show()
+        LC1 = K[0]
+        LC2 = K[1]
+        list_of_tuples.append([LC, LC1, LC2])
+        if len(LC1) > len(LC2):
+            G = G.subgraph(LC1)
+            G = nx.Graph(G)
+            LC = LC1
+        else:
+            G = G.subgraph(LC2)
+            G = nx.Graph(G)
+            LC = LC2
+
+        K = STUDENT_4555_4561_one_shot_girvan_newman_for_communities(G, graph_layout, '')
+
+    print("LIST OF TUPLES HIERARCHY: ", list_of_tuples)
+
+    """
     print(bcolors.ENDC + "\tUSEFUL FUNCTIONS:")
 
     print(bcolors.ENDC + "\t\t"
@@ -740,6 +770,7 @@ def STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout
     print(bcolors.ENDC + "\t\t"
           + bcolors.OKCYAN + "community_tuples.append(...) "
           + bcolors.ENDC + "can add the computed subcommunities' tuples, in substitution of the giant component.")
+    """
 
     end_time = time.time()
     print(bcolors.ENDC + "\t===================================================")
@@ -748,12 +779,37 @@ def STUDENT_AM_divisive_community_detection(G, number_of_divisions, graph_layout
           G.number_of_edges(), "links. "
           + "Computation time =", end_time - start_time, "\n")
 
+    return list_of_tuples
+
 
 ######################################################################################################################
-def STUDENT_AM_determine_opt_community_structure(G, hierarchy_of_community_tuples):
+def STUDENT_4555_4561_determine_opt_community_structure(G, hierarchy_of_community_tuples):
+    global list_of_tuples
     print(
-        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_determine_opt_community_structure(G,hierarchy_of_community_tuples)" + bcolors.ENDC + "\n")
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_4555_4561_determine_opt_community_structure(G,hierarchy_of_community_tuples)" + bcolors.ENDC + "\n")
 
+    modularities = []
+    LCs = []
+    min = 200000
+    i = 0
+    for com in list_of_tuples:
+        p1 = partition(com[1])
+        p2 = partition(com[2])
+        LCs.append("LC1_" + str((i % 2)))
+        LCs.append("LC2_" + str((i % 2)))
+        modul1 = community.modularity(p1, com[1])
+        modularities.append(modul1)
+        modul2 = community.modularity(p2, com[2])
+        modularities.append(modul2)
+        i += 1
+
+    plt.bar(LCs, modularities)
+    plt.title('modularities')
+    plt.xlabel('LCs')
+    plt.ylabel('modularities')
+    plt.show()
+
+    """
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
         # GIVEN A HIERARCHY OF COMMUNITY PARTITIONS FOR A GRAPH, COMPUTE THE MODULARITY OF EAC COMMUNITY PARTITION. 
@@ -773,11 +829,17 @@ def STUDENT_AM_determine_opt_community_structure(G, hierarchy_of_community_tuple
         #   RETURN  (min_partition, min_modularity_value)   
         ######################################################################################################################
         ''')
+    """
 
 
 ######################################################################################################################
-def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
+def STUDENT_4555_4561_add_hamilton_cycle_to_graph(G, node_names_list):
+    global graph_nodes_list
+    print(
+        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_4555_4561_add_hamilton_cycle_to_graph(G,node_names_list)" + bcolors.ENDC + "\n")
+
     hamilton = []
+    node_names_list = graph_nodes_list
     for node in range(len(node_names_list)):
         if node + 1 < len(node_names_list):
             G.add_edge(node_names_list[node], node_names_list[node + 1])
@@ -786,13 +848,10 @@ def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
             G.add_edge(node_names_list[0], node_names_list[node])
             hamilton.append((node_names_list[0], node_names_list[node]))
 
+    print("HAMILTON LIST: ", hamilton)
     my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
 
-    """
-    print(
-        bcolors.ENDC + "\tCalling routine " + bcolors.HEADER + "STUDENT_AM_add_hamilton_cycle_to_graph(G,node_names_list)" + bcolors.ENDC + "\n")
-
-    print(bcolors.ENDC + "\t" + '''
+    """print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
         # GIVEN AN INPUT GRAPH WHICH IS DISCONNECTED, ADD A (HAMILTON) CYCLE CONTAINING ALL THE NODES IN THE GRAPH
         # INPUT: A graph G, and a list of node-IDs.
@@ -810,12 +869,20 @@ def STUDENT_AM_add_hamilton_cycle_to_graph(G, node_names_list):
           + bcolors.ENDC + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
     """
 
+    return G
+
 
 ######################################################################################################################
 # ADD RANDOM EDGES TO A GRAPH...
 ######################################################################################################################
-def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, EDGE_ADDITION_PROBABILITY):
+def STUDENT_4555_4561_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, EDGE_ADDITION_PROBABILITY):
+    global graph_nodes_list
+    print(bcolors.ENDC + "\tCalling routine "
+          + bcolors.HEADER + "STUDENT_4555_4561_add_random_edges_to_graph(G,node_names_list,NUM_RANDOM_EDGES,EDGE_ADDITION_PROBABILITY)"
+          + bcolors.ENDC + "\n")
+
     loopless_links_list = G.edges
+    node_names_list = graph_nodes_list
     # initialize neighbors dictionary
     neighbors_of = dict()
     not_neighbors_of = dict()
@@ -823,6 +890,8 @@ def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, E
         neighbors_of[i] = []
         not_neighbors_of[i] = []
 
+    print("NODE NAME LIST: ", node_names_list)
+    print("LOOPLESS: ", loopless_links_list)
     # add all of the neighbors of every node to a list in dictionary
     for tup in loopless_links_list:
         neighbors_of[tup[0]].append(tup[1])
@@ -852,10 +921,6 @@ def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, E
     my_graph_plot_routine(G, 'r', 'b', 'solid', 'circular', '')
 
     """
-    print(bcolors.ENDC + "\tCalling routine "
-          + bcolors.HEADER + "STUDENT_AM_add_random_edges_to_graph(G,node_names_list,NUM_RANDOM_EDGES,EDGE_ADDITION_PROBABILITY)"
-          + bcolors.ENDC + "\n")
-
     print(bcolors.ENDC + "\t" + '''
         ######################################################################################################################
         # GIVEN AN INPUT GRAPH WHICH IS DISCONNECTED, ADD A (HAMILTON) CYCLE CONTAINING ALL THE NODES IN THE GRAPH
@@ -877,31 +942,48 @@ def STUDENT_AM_add_random_edges_to_graph(G, node_names_list, NUM_RANDOM_EDGES, E
           + bcolors.ENDC + "plots the graph with the grey-color for nodes, and (blue color,solid style) for the edges.\n")
     """
 
+    return G
+
 
 ######################################################################################################################
 # VISUALISE COMMUNITIES WITHIN A GRAPH
 ######################################################################################################################
-def STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_positions):
+def STUDENT_4555_4561_visualize_communities(G, community_tuples, graph_layout, node_positions):
+    global graph_nodes_list
     print(bcolors.ENDC + "\tCalling routine "
-          + bcolors.HEADER + "STUDENT_AM_visualize_communities(G,community_tuples,graph_layout,node_positions)" + bcolors.ENDC + "\n")
+          + bcolors.HEADER + "STUDENT_4555_4561_visualize_communities(G,community_tuples,graph_layout,node_positions)" + bcolors.ENDC + "\n")
+
+    node_names_list = graph_nodes_list
 
     # plot the communities
-    community_tuples = STUDENT_AM_use_nx_girvan_newman_for_communities(G, 'circular', '')
+    community_tuples = STUDENT_4555_4561_one_shot_girvan_newman_for_communities(G, graph_layout, '')
     print(community_tuples)
+    #colors = my_random_color_list_generator(len(community_tuples))
     color_map = []
-    colors = ["lightcoral", "gray", "lightgray", "firebrick", "red", "chocolate", "darkorange", "moccasin", "gold", "yellow", "darkolivegreen", "chartreuse", "forestgreen", "lime", "mediumaquamarine", "turquoise", "teal", "cadetblue", "dogerblue", "blue", "slateblue", "blueviolet", "magenta", "lightsteelblue"]
+
+    colors = ["lightcoral", "gray", "lightgray", "firebrick", "red", "chocolate", "darkorange", "moccasin", "gold",
+              "yellow", "darkolivegreen", "chartreuse", "forestgreen", "lime", "mediumaquamarine", "turquoise", "teal",
+              "cadetblue", "dogerblue", "blue", "slateblue", "blueviolet", "magenta", "lightsteelblue"]
     for com in community_tuples:
         color = random.choice(colors)
         for node in com:
-            color_map.insert(node, color)
+            position = node_names_list.index(node)
+            color_map.insert(position, color)
         colors.remove(color)
 
-
-    print("color_map: ", color_map)
-    print(len(color_map))
+    """
+    for com in community_tuples:
+        color = random.choice(colors)
+        for node in node_names_list:
+            pos = node_names_list.index(node)
+            print("NODE: ", node ,"IN POSITION: ", pos)
+            color_map.insert(pos, color)
+            print("COLOR MAP: ", color_map)
+        colors.remove(color)
+        print("COLORS:", colors)
+    """
     nx.draw(G, node_color=color_map, with_labels=True)
     plt.show()
-
 
     """
     print(
@@ -920,8 +1002,9 @@ def STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_pos
         bcolors.OKCYAN + "\t\tmy_graph_plot_routine(G,node_colors,'blue','solid',graph_layout,node_positions)" + bcolors.ENDC + " plots the graph with the chosen node colors, and (blue color,solid style) for the edges.")
     """
 
+
 ########################################################################################
-########################### STUDENT_AM ROUTINES LIBRARY ENDS ###########################
+########################### STUDENT_4555_4561 ROUTINES LIBRARY ENDS ###########################
 ########################################################################################
 
 
@@ -930,6 +1013,8 @@ def STUDENT_AM_visualize_communities(G, community_tuples, graph_layout, node_pos
 ########################################################################################
 
 ############################### GLOBAL INITIALIZATIONS #################################
+
+global node_names_list
 G = nx.Graph()  # INITIALIZATION OF THE GRAPH TO BE CONSTRUCTED
 node_names_list = []
 node_positions = []  # INITIAL POSITIONS OF NODES ON THE PLANE ARE UNDEFINED...
